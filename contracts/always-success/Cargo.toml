@@ -1,0 +1,20 @@
+[package]
+name = "cellnames-always-success"
+version = "0.1.0"
+edition = "2021"
+description = "CellNames testnet placeholder — always-success type script for development/demo"
+
+[workspace]
+
+[[bin]]
+name = "cellnames-always-success"
+path = "src/main.rs"
+
+[dependencies]
+ckb-std = { version = "1.1.0", default-features = false, features = ["allocator", "dummy-atomic"] }
+
+[profile.release]
+overflow-checks = true
+opt-level = "s"
+lto = true
+codegen-units = 1

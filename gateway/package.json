@@ -1,0 +1,14 @@
+{
+  "name": "@cellnames/gateway",
+  "version": "0.1.0",
+  "description": "CellNames DoH gateway — RFC 8484 DNS-over-HTTPS resolver backed by Nervos CKB",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "dns-packet": "^5.6.1"
+  }
+}

@@ -4,6 +4,8 @@
  * Normalisation, hashing, and cell identification.
  */
 
+import { hashCkb } from "@ckb-ccc/core";
+
 /**
  * Normalise a domain name for hashing.
  * - Lowercase
@@ -46,17 +48,15 @@ export function normaliseDomain(name) {
 
 /**
  * Hash a normalised domain name to a 32-byte domain ID.
- * Uses Blake2b-256 (CKB standard).
+ * Uses CKB blake2b-256 (personalisation: "ckb-default-hash") via @ckb-ccc/core.
  *
  * @param {string} normalisedName — output of normaliseDomain()
  * @returns {Uint8Array} — 32 bytes
  */
-export async function hashDomain(normalisedName) {
-  // Use SubtleCrypto SHA-256 as a fallback until we wire in blake2b
-  // TODO: Replace with CKB blake2b (ckb-js-toolkit or @ckb-ccc/core)
+export function hashDomain(normalisedName) {
   const encoded = new TextEncoder().encode(normalisedName);
-  const hash = await crypto.subtle.digest("SHA-256", encoded);
-  return new Uint8Array(hash);
+  const hex = hashCkb(encoded);
+  return new Uint8Array(hex.slice(2).match(/.{2}/g).map(b => parseInt(b, 16)));
 }
 
 /**
