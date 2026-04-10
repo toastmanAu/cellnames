@@ -1,4 +1,7 @@
 import http from 'http';
+import https from 'https';
+import fs from 'fs';
+import dgram from 'dgram';
 import dnsPacket from 'dns-packet';
 import { resolve, buildAnswers } from './resolver.js';
 import { config } from './config.js';
@@ -65,8 +68,21 @@ function sendResponse(res, buf, ttl) {
   res.end(buf);
 }
 
-const server = http.createServer((req, res) => {
-  const url = new URL(req.url, `http://localhost:${config.port}`);
+function createServer(handler) {
+  const certPath = process.env.TLS_CERT;
+  const keyPath  = process.env.TLS_KEY;
+  if (certPath && keyPath) {
+    return https.createServer({
+      cert: fs.readFileSync(certPath),
+      key:  fs.readFileSync(keyPath),
+    }, handler);
+  }
+  return http.createServer(handler);
+}
+
+const server = createServer((req, res) => {
+  const proto = req.socket.encrypted ? 'https' : 'http';
+  const url = new URL(req.url, `${proto}://localhost:${config.port}`);
 
   if (url.pathname === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -108,4 +124,44 @@ server.listen(config.port, () => {
   console.log(`CellNames DoH  :${config.port}/dns-query`);
   console.log(`CKB RPC        ${config.ckbRpcUrl}`);
   console.log(`Type hash      ${config.cellnamesTypeHash}`);
+});
+
+// Plain UDP DNS listener — for dnsmasq/system resolver forwarding
+const dnsPort = parseInt(process.env.DNS_PORT ?? '5300');
+const udpServer = dgram.createSocket('udp4');
+
+udpServer.on('message', async (msg, rinfo) => {
+  let query;
+  try { query = dnsPacket.decode(msg); } catch { return; }
+
+  const question = query.questions?.[0];
+  if (!question) return;
+
+  const { name, type: qtype } = question;
+  let answers = [];
+  let rcode = 'REFUSED';
+
+  if (name.toLowerCase().endsWith('.ckb')) {
+    try {
+      const decoded = await resolve(name);
+      answers = buildAnswers(name, qtype, decoded);
+      rcode = decoded ? 'NOERROR' : 'NXDOMAIN';
+    } catch {
+      rcode = 'SERVFAIL';
+    }
+  }
+
+  const response = dnsPacket.encode({
+    type: 'response',
+    id: query.id,
+    flags: dnsPacket.AUTHORITATIVE_ANSWER,
+    rcode,
+    questions: query.questions,
+    answers,
+  });
+  udpServer.send(response, rinfo.port, rinfo.address);
+});
+
+udpServer.bind(dnsPort, '127.0.0.1', () => {
+  console.log(`CellNames DNS  :${dnsPort} (UDP, plain DNS for dnsmasq)`);
 });

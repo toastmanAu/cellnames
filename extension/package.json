@@ -1,0 +1,16 @@
+{
+  "name": "@cellnames/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.7.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.2"
+  }
+}

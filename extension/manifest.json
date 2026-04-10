@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "CellNames",
+  "version": "0.1.0",
+  "description": "Resolve .ckb domains on Nervos CKB — decentralised DNS powered by the CKB blockchain.",
+  "permissions": ["webNavigation", "tabs"],
+  "host_permissions": [
+    "https://testnet.ckbapp.dev/*",
+    "https://mainnet.ckbapp.dev/*"
+  ],
+  "background": {
+    "service_worker": "dist/background.js"
+  },
+  "web_accessible_resources": [{
+    "resources": ["resolve.html"],
+    "matches": ["<all_urls>"]
+  }],
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_icon": "icons/icon48.png",
+    "default_popup": "popup.html",
+    "default_title": "CellNames"
+  }
+}

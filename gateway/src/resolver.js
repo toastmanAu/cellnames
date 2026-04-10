@@ -18,8 +18,8 @@ async function fetchCell(hashHex) {
         },
         script_type: 'type',
       },
-      'asc',
-      '0x2',
+      'desc',
+      '0x1',
     ],
   };
 
